@@ -34,8 +34,8 @@ from linebot.models import (
 from linebot.utils import PY3
 
 # get channel_secret and channel_access_token from Line Business Center
-channel_secret = '0483caf416817efc814ff762c2428b01'
-channel_access_token = 'XsvoTYEQEfHexUMLEjgCV4rt644pQ8x1Irx+xoJqzdgvJGUUNTRiPkLwZaiAhyrdC+7jOU82Cda/xOK1Dd2MTx2+oNIspgWeo0v/biwUFKhYfnA6dkSJoqUj8K23qJ6Z+uKwQcHrAYjENNRQ/2zFrQdB04t89/1O/w1cDnyilFU='
+channel_secret = 'in Line Bussiness Center : messaging api'
+channel_access_token = 'in Line Bussiness Center : messaging api'
 
 line_bot_api = LineBotApi(channel_access_token)
 parser = WebhookParser(channel_secret)
@@ -57,7 +57,7 @@ class LinebotHandler(webapp2.RequestHandler):
         # get X-Line-Signature header value
         signature = self.request.headers['X-Line-Signature']
         
-         # get request body as text
+        # get request body as text
         body = self.request.body
         logging.info("Request body: " + body)
                 
@@ -96,10 +96,10 @@ class LinebotHandler(webapp2.RequestHandler):
             logging.info("user_data in DB // " + user_data.user_id + ", " + user_data.guess_number)
             logging.info("user message // " + event.message.text)
             
-            #check user message is command or not
+            # check user message is command or not
             if event.message.text == "reset" or event.message.text == "Reset" or event.message.text == "r" or event.message.text == "R":
                 random_v = str(self.gen_answer())
-                user_data.guess_number=random_v
+                user_data.guess_number = random_v
                 user_data.put()
                 
                 logging.info("random_v: " + random_v)
@@ -125,14 +125,14 @@ class LinebotHandler(webapp2.RequestHandler):
         
     def gen_answer(self):
         while 1:
-            r = random.randint(1234,9876)
-            #   print(r) 亂數產生不重複4位數
-            if int(r)%10 != int(r/10)%10:
-                if int(r)%10 != int(r/100)%10:
-                    if int(r)%10 != int(r/1000)%10:
-                        if int(r/10)%10 != int(r/100)%10:
-                            if int(r/10)%10 != int(r/1000)%10:
-                                if int(r/100)%10 != int(r/1000)%10:
+            r = random.randint(1234, 9876)
+            #  gen non-repeat number
+            if int(r) % 10 != int(r/10) % 10:
+                if int(r) % 10 != int(r/100) % 10:
+                    if int(r) % 10 != int(r/1000) % 10:
+                        if int(r/10) % 10 != int(r/100) % 10:
+                            if int(r/10) % 10 != int(r/1000) % 10:
+                                if int(r/100) % 10 != int(r/1000) % 10:
                                     return r
                                 else:                       
                                     continue
@@ -171,5 +171,3 @@ class LinebotHandler(webapp2.RequestHandler):
                     is_all_digit = False
                     return False, "可以都是數字嗎?"    
         return True, ""
-        
-        

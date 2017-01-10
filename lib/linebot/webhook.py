@@ -22,6 +22,11 @@ import hmac
 import inspect
 import json
 
+# fix chinese utf8 and unicode issue : without these part, it will got exception in lineboot
+import sys  
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
 from .exceptions import InvalidSignatureError
 from .models.events import (
     MessageEvent,

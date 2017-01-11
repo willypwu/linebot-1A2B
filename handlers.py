@@ -40,6 +40,10 @@ channel_access_token = 'in Line Bussiness Center : messaging api'
 line_bot_api = LineBotApi(channel_access_token)
 parser = WebhookParser(channel_secret)
 
+success_messages = ['你答對拉~', '你是不是有點強', '都給你玩就好拉', '100分']
+almost_messages = ['你快成功了', '路遙知馬力', '成功是一分的天才，加上九十九分的努力', "加把勁"]
+fail_messages = ['GG拉', '認真點好嗎？', '你有在玩嗎', '你要不要去睡覺', '好拉 加油']
+
 
 class UserData(ndb.Model):
     user_id = ndb.StringProperty()
@@ -78,7 +82,7 @@ class LinebotHandler(webapp2.RequestHandler):
 
             # get user id
             profile = line_bot_api.get_profile(event.source.user_id)
-            logging.info("source: " + str(profile.user_id))
+            logging.info("@user_info // id:" + str(profile.user_id) + ", name:" + str(profile.display_name))
             
             # try to get user data in DB
             results = UserData.query(UserData.user_id == str(profile.user_id)).fetch(1)
@@ -97,16 +101,12 @@ class LinebotHandler(webapp2.RequestHandler):
             logging.info("user message // " + event.message.text)
             
             # check user message is command or not
-            if event.message.text == "reset" or event.message.text == "Reset" or event.message.text == "r" or event.message.text == "R":
-                random_v = str(self.gen_answer())
-                user_data.guess_number = random_v
-                user_data.put()
-                
-                logging.info("random_v: " + random_v)
+            is_command, user_message = self.handle_command_if_need(event.message.text, user_data)
+            if is_command is True:
                 line_bot_api.reply_message(
                     event.reply_token,
-                    TextSendMessage("重設定了唷 可以繼續玩了")
-                )    
+                    TextSendMessage(user_message)
+                )
             else:    
                 # handle the game result
                 user_message_array = list(event.message.text)
@@ -114,15 +114,39 @@ class LinebotHandler(webapp2.RequestHandler):
                 if valid is True:
                     answer = user_data.guess_number
                     a, b = self.check_answer(user_message_array, answer)
-                    user_message = str(a) + "A" + str(b) + "B" + "   @@!"
-
+                    user_message = str(a) + " A " + str(b) + " B " + "\n" + self.get_murmur_message(a, b)
                 line_bot_api.reply_message(
                     event.reply_token,
                     TextSendMessage(text=user_message)
                 )
 
         self.response.write("status : ok")
-        
+
+    def get_murmur_message(self, a_count, b_count):
+        if a_count is 4:
+            return random.choice(success_messages) + "\n要重新玩記得reset喔"
+        elif a_count + b_count >= 3:
+            return random.choice(almost_messages)
+        else:
+            return random.choice(fail_messages)
+
+    def handle_command_if_need(self, text, user_data):
+        if text == "reset" or text == "Reset" or text == "r" or text == "R":
+            random_v = str(self.gen_answer())
+            user_data.guess_number = random_v
+            user_data.put()
+
+            logging.info("random_v: " + random_v)
+            return True, "重設定了唷 可以繼續玩了"
+        elif text == "help" or text == "Help" or text == "h" or text == "H":
+            message = "我們來玩1A2B ~\n" \
+                   "輸入4個不連續數字\n" \
+                   "如果要猜新的數字 直接跟我說\n" \
+                   "reset, Reset, r 或是 R 都是可以的喔"
+            return True, message
+        else:
+            return False, ""
+
     def gen_answer(self):
         while 1:
             r = random.randint(1234, 9876)
